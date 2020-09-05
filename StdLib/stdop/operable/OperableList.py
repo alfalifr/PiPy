@@ -7,7 +7,7 @@ from generic.Generics_ import T
 from stdop.operable.OperableIterable import OperableIterable
 
 
-class OperableList(OperableIterable[T]):
+class OperableList(OperableIterable[T], List[T]):
     """
     Kelas yg berisi sekumpulan data yg mirip dg List dg fungsi tambahan.
     """
@@ -72,7 +72,7 @@ class OperableList(OperableIterable[T]):
         return acc["val"]
 
     @property
-    def length(this):
+    def size(this):
         return len(this.content)
 
     @property
@@ -82,7 +82,7 @@ class OperableList(OperableIterable[T]):
 
     @property
     def last(this):
-        try: return this.content[this.length - 1]
+        try: return this.content[this.size - 1]
         except: raise NoSuchElementExc("List kosong.")
 
 

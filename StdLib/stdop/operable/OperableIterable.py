@@ -49,12 +49,12 @@ class OperableIterable(FlatWrapper[T_out], Iterable[T_out]):
         for e in this:
             outerE = e
         return outerE
-
+    """
     @property
     def firstOrNull(this):
         try: return this.last
         except NoSuchElementExc: return None
-
+    """
     @property
     def isEmpty(this) -> bool:
         try:

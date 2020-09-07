@@ -1,6 +1,12 @@
 import inspect
 from typing import List
 
+
+from meta.CallSuper import CallSuper
+from meta.Final import Final
+from meta.MetaInspectable import MetaInspectable
+from meta.MetaInspector import MetaInspector
+from reflex import _Reflex
 from stdop.operable.OperableFun_ import toSequence, toList
 from stdop.operable.OperableList import listOf
 from stdop.operable.OperableSequence import OperableSequence
@@ -91,21 +97,36 @@ print(fun.__dict__)
 def attach(name: str, nilai):
     def inner(fun):
         fun.atch = 10
+        print(f"attach.inner() name= {name} nilai= {nilai}")
         setattr(fun, name, nilai)
         return fun
     return inner
+
+def inspectMeta(*metas: MetaInspectable):
+    def innerClassFun(cls):
+        name = cls.__name__
+        print(f"inspectMeta() name= {name}")
+        print(f"inspectMeta() dict= {cls.__dict__}")
+        print(f"inspectMeta() members= {inspect.getmembers(cls)}")
+#        metas[0].cob()
+        return cls
+    if len(metas) == 1 and not (issubclass(metas[0], MetaInspectable) or isinstance(metas[0], MetaInspectable)):
+        raise TypeError(f"argumen inspectMeta() harus bertipe MetaInspectable, argumen aktual = {metas[0]}")
+    return innerClassFun
 
 class Meta(type):
     clsList: List[str]
     def __init__(mcls, something, b, c):
         cls = super().__init__(something, b, c)
-        print(f"something= {something}", f"b= {b}", f"c= {c}",)
+        print(f"something= {something}", f"b= {b}", f"c= {c}", f"\"ada\" in c = {'ada' in c}")
         mcls.cobMet()
         return cls
 
     def cobMet(cls: str):
         print(f"Meta cobMet() cls= {cls}")
 
+
+@inspectMeta(CallSuper) #@attach("halo", 1091)
 class A(metaclass=Meta):
     def __init__(this, a):
         print(f"A init this.ada= {this.ada}")
@@ -113,13 +134,28 @@ class A(metaclass=Meta):
     @attach('makmu', 109)
     def ada(this):
         print(f"ada() ok= {this.ada.ok}")
+        print(f"ada() 2 ok= {this.ada.ok}")
+    def __dict__(this):
+        return "haha"
+class A2:
+    def ada2(this):
+        print(f"ada2()")
 
+attr = "bc"
 #A.ada.halo = "bro"
-class B(A):
+
+#@inspectMeta(CallSuperMeta, CallSuperMeta)
+@attach("aka", 1018)
+class B(A2, A):
     b = 10
-    def __init__(this):
+    # [attr] = "101"
+
+    def __init__(this, b):
         print(f"B init this.ada= {this.ada}")
+        this.c = b
 #        this.ada.ok = 2
+
+class C(B): pass
 """
     def ada(this):
         print(f"B.ada() ok")
@@ -131,9 +167,19 @@ class B(A):
 #print(Meta())
 
 print("\n============== batas =================\n")
-print(B().ada.atch)
-print(B().ada.makmu)
-for mem in inspect.getmembers(B()):
+b = B(14)
+print(b.ada.atch)
+print(b.ada.makmu)
+print(b.ada.__dict__)
+print(B.ada.__dict__)
+print(b.__dict__)
+print(b.__class__.__dict__)
+print(B.mro())
+print(C.mro())
+#print(B.c)
+
+print("\n============== batas =================\n")
+for mem in inspect.getmembers(B(15)):
     print(f"member= {mem[1]}")
 
 def kwarg(**a: str):
@@ -141,12 +187,82 @@ def kwarg(**a: str):
         print(e)
     print(a)
 
-
 kwarg(halo=1, ok=10)
 
-print(isinstance("afa", int))
+@property
+def propFun(): return "propFun"
 
-B().aadd
+print(propFun)
+
+print(isinstance("afa", int))
+print(isinstance("afa", str))
+print("afa" is str)
+
+#print(f"CallSuperMeta is MetaInspectable = {isinstance(CallSuperMeta, MetaInspectable)}")
+
+
+print(f"isinstance(CallSuperMeta, type)= {isinstance(CallSuper, type)}")
+print(f"isinstance(kwarg, type)= {isinstance(kwarg, type)}")
+
+dick = { 'a':1 }
+for d in dick:
+    print(f"dick= {d}")
+
+print(dick.keys())
+
+
+print("\n=================== link =================\n")
+
+print(inspect.getsourcelines(A.ada))
+print(inspect.getsourcelines(A.ada))
+print(inspect.getfile(A.ada))
+print(_Reflex.classesTree(B))
+print(_Reflex.classesTree(B, False))
+print(type(A.__class__).__name__)
+print(A.ada.__name__)
+
+print("\n=================== Final Meta =================\n")
+
+
+class A(metaclass=MetaInspector):
+    @Final
+    def ada(this):
+        print(f"A.ada()")
+
+    @CallSuper
+    def adade(this):
+        print(f"A.adade()")
+
+
+print(f"A.__subclasses__() = {A.__subclasses__()}")
+
+class B(A): pass
+
+class C(B):
+    def adade(this):
+        print(f"C.adade()")
+"""        
+        return super(
+
+        ).adade(
+            
+        )
+"""
+
+
+"""    
+    def ada(this):
+        print(f"C.ada()")
+        print(f"C.ada() 2")
+"""
+
 
 
 # type("HaloCls", (B,), {"x": 1})
+
+print(f"A.__subclasses__() = {A.__subclasses__()}")
+
+print(f"inspect.getmembers(B)= {inspect.getmembers(B)}")
+print(f"B.__dict__= {B.__dict__}")
+
+print(A())

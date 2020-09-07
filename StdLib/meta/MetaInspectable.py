@@ -1,14 +1,21 @@
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, List
 
 from foundation.wrapper.FlatWrapper import FlatWrapper
 from generic.Generics_ import T
+from meta.MetaConst import MetaConst
 
 
 class MetaInspectable(ABC, FlatWrapper[T]):
     """
     Kelas dasar yg dapat digunakan sbg unit inspeksi yg dicek oleh semua metaclass yg ada di library ini.
     """
+    #TODO blum bisa untuk anotasi yg menerima param tambahan.
+    def __init__(this, content: T):
+        super().__init__(content)
+        setattr(content, MetaConst.INSPECTABLE_PROP_NAME, this)
+        this.injectData(content)
+        print(f"MetaInspectable.__init__() this = {this} isinstance(this, MetaInspectable)= {isinstance(this, MetaInspectable)}")
 
     name: str = None
     """
@@ -19,11 +26,22 @@ class MetaInspectable(ABC, FlatWrapper[T]):
     bool: bool = False
     """Berisi valaue boolean yg akan di-inspeksi oleh metaclass pada library ini."""
 
+    def injectData(this, content: T): pass
+
     @abstractmethod
     def isImplementationValid(
-        this, inspectedCls: Any, supers: Tuple[type],
+        this, inspectedCls: Any,
+        supers: List[type], immediateSubclasses: List[type], # //Gak berguna karena metaclass dipanggil sebelum subclass di-deklarasikan.
         inspectedMember: Dict[str, Any]  # , meta: MetaInspectable
     ) -> bool: pass
+
+    def implementationErrorMsg(this) -> str:
+        return ""
+
+    def errorImplemetedMember(this):
+        return this.content
+
+#    def cob(this): print(f"MetaInspectable.cob()")
 
 
 def createMetaInspectableFrom(obj, name: str = "") -> MetaInspectable[T]:

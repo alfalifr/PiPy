@@ -36,15 +36,19 @@ class MetaInspector(type):
         for memberName in namespace:
             member = namespace[memberName]
             print(f"MetaInspector member= {member} memberName= {memberName}")
+            try: print(f"MetaInspector member= {member} memberName= {memberName} dict= {member.__dict__}")
+            except: pass
             if memberName == Meta.INSPECTABLE_PROP_NAME:
-                if isinstance(member, MetaInspectable):
-                    inspectMember(member)
-                else:
-                    for inspectable in member:
-                        print(f"MetaInspector cls= {cls} member= {member} Meta.INSPECTABLE_PROP_NAME= {Meta.INSPECTABLE_PROP_NAME}")
-                        inspectMember(inspectable)
-                setattr(cls, Meta.CLASS_INSPECTABLE_MARK, True)
-                print(cls.__dict__[Meta.CLASS_INSPECTABLE_MARK])
+                if not isinstance(member, list): continue
+                isMemberAnnotated = False
+                for inspectable in member:
+                    if not isinstance(inspectable, MetaInspectable): continue
+                    print(f"MetaInspector cls= {cls} member= {member} Meta.INSPECTABLE_PROP_NAME= {Meta.INSPECTABLE_PROP_NAME}")
+                    isMemberAnnotated = True
+                    inspectMember(inspectable)
+                if isMemberAnnotated:
+                    setattr(cls, Meta.CLASS_INSPECTABLE_MARK, True)
+                    print(cls.__dict__[Meta.CLASS_INSPECTABLE_MARK])
                 continue
 
             try: nestedMembers = member.__dict__
@@ -52,23 +56,21 @@ class MetaInspector(type):
 
             for nestedMemberName in nestedMembers:  # Iterasi terhadap dict akan dilakukan pada key-nya.
                 nestedMember = nestedMembers[nestedMemberName]
+                print(f"MetaInspector nestedMemberName= {nestedMemberName} nestedMember= {nestedMember} isinstance(nestedMember, MetaInspectable)= {isinstance(nestedMember, MetaInspectable)}")
 
-                if isinstance(nestedMember, MetaInspectable):
-                    inspectables = nestedMember
-                    inspectMember(inspectables)
-                else:
-                    inspectables = _Reflex.getInspectable(nestedMember)
-                    if not inspectables:
-                        continue
-
-                print(f"MetaInspector nestedMember= {nestedMember} inspectables= {inspectables} isinstance(nestedMember, MetaInspectable)= {isinstance(nestedMember, MetaInspectable)}")
-                for inspectable in inspectables:
+                #print(f"MetaInspector nestedMember= {nestedMember} inspectables= {inspectables} isinstance(nestedMember, MetaInspectable)= {isinstance(nestedMember, MetaInspectable)}")
+                if not isinstance(nestedMember, list): continue
+                isMemberAnnotated = False
+                for inspectable in nestedMember:
+                    if not isinstance(inspectable, MetaInspectable): continue
                     print(f"MetaInspector inspectable = {inspectable} this = {cls}")
-                    print(f"MetaInspector nestedMember.content= {nestedMember.content}")
-                    print(f"MetaInspector _Reflex.isType(nestedMember.content)= {_Reflex.isType(nestedMember.content)}")
-                    print(f"MetaInspector _Reflex.isFunction(nestedMember.content)= {_Reflex.isFunction(nestedMember.content)}")
+                    print(f"MetaInspector inspectable.content= {inspectable.content}")
+                    print(f"MetaInspector _Reflex.isType(inspectable.content)= {_Reflex.isType(inspectable.content)}")
+                    print(f"MetaInspector _Reflex.isFunction(inspectable.content)= {_Reflex.isFunction(inspectable.content)}")
+                    isMemberAnnotated = True
                     inspectMember(inspectable)
-                setattr(cls, Meta.CLASS_INSPECTABLE_MARK, True)
+                if isMemberAnnotated:
+                    setattr(cls, Meta.CLASS_INSPECTABLE_MARK, True)
                 break
 
         superclassTree = _Reflex.superclassesTree(cls, False)

@@ -21,8 +21,10 @@ class Final(MetaInspectable):
         unit = inspectedUnit[name]
         this._inspected = unit
         if _Reflex.isType(unit):
-            this._inspectedImpl = unit
-            return len(immediateSubclasses) == 0
+            if len(immediateSubclasses) > 0:
+                this._inspectedImpl = immediateSubclasses[0]
+                return False
+            return True
         else:
             for sub in immediateSubclasses:
                 for methodName in sub.__dict__:

@@ -247,7 +247,7 @@ class D(metaclass=MetaInspector):
 
 print(f"D.__subclasses__() = {D.__subclasses__()}")
 
-#@classMeta(Final(a=10, z="ok"), CallSuper)
+@classMeta(Final(a=10, z="ok"), CallSuper)
 class E(D): pass
 
 print(f"E= {E}")

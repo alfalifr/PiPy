@@ -8,23 +8,23 @@ from meta.MetaInspector import MetaInspector
 from meta.metameta.Target import Target
 
 
-#@Target(10)
+@Target(Target.FUNCTION)
 class CallSuper(MetaInspectable):
     name: str = "CallSuper"
 
     def isImplementationValid(
-        this, inspectedCls: Any,
+        this, inspectedCls: type,
         supers: List[type], immediateSubclasses: List[type],
-        inspectedMember: Dict[str, Any]
+        inspectedUnit: Dict[str, Any]
     ) -> bool:
-        name = list(inspectedMember.keys())[0]
+        name = list(inspectedUnit.keys())[0]
         patternStr = f"super\\s*\\([\\s\\S]*\\)\\.{name}\\s*\\([\\s\\S]*\\)"
 
         for sub in immediateSubclasses:
             for methodName in sub.__dict__:
                 if name == methodName:
                     this._subCls = sub
-                    this._meth = inspectedMember[name]
+                    this._meth = inspectedUnit[name]
                     this._subMeth = sub.__dict__[methodName]
                     src = inspect.getsource(this._subMeth)
                     if re.search(patternStr, src):

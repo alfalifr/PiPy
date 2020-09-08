@@ -4,8 +4,9 @@ from typing import Tuple, Dict, Any, Iterable, List
 
 from exception.IllegalStateExc import IllegalStateExc
 from exception.MetaInspectionExc import MetaInspectionExc
-from meta.MetaConst import MetaConst
+from meta import Meta
 from meta.MetaInspectable import MetaInspectable, createMetaInspectable
+from meta.metameta.Target import Target
 from reflex import _Reflex
 
 
@@ -20,34 +21,74 @@ class MetaInspector(type):
 
         superList = list(supers)
 
-        for member in namespace.values():
-            print(f"MetaInspector member= {member}")
+        def inspectMember(inspectable: MetaInspectable):
+            inspectedMember = inspectable.content
+            print(f"MetaInspector.init.inspectMember() inspectedMember= {inspectedMember}")
+            nestedMemberDict = {inspectedMember.__name__: inspectedMember}
+            if not inspectable.isImplementationValid(cls, superList, immediateSubclasses, nestedMemberDict):
+                msg = inspectable.implementationErrorMsg().strip() \
+                      or f"""Terjadi kesalahan pada kelas: "{name}" implementasi member: "{inspectedMember}" dg meta: "{inspectedMember.__class__}"."""
+                msg += f"\n   {_Reflex.getLineInfo(inspectable.errorImplemetedMember())}"
+                raise MetaInspectionExc(msg)
+
+        # Pengecekan untuk @Target(Target.FUNCTION)
+        # Pengecekan untuk @Target(Target.FUNCTION)
+        for memberName in namespace:
+            member = namespace[memberName]
+            print(f"MetaInspector member= {member} memberName= {memberName}")
+            if memberName == Meta.INSPECTABLE_PROP_NAME:
+                if isinstance(member, MetaInspectable):
+                    inspectMember(member)
+                else:
+                    for inspectable in member:
+                        print(f"MetaInspector cls= {cls} member= {member} Meta.INSPECTABLE_PROP_NAME= {Meta.INSPECTABLE_PROP_NAME}")
+                        inspectMember(inspectable)
+                setattr(cls, Meta.CLASS_INSPECTABLE_MARK, True)
+                print(cls.__dict__[Meta.CLASS_INSPECTABLE_MARK])
+                continue
+
             try: nestedMembers = member.__dict__
             except AttributeError: continue
 
             for nestedMemberName in nestedMembers:  # Iterasi terhadap dict akan dilakukan pada key-nya.
                 nestedMember = nestedMembers[nestedMemberName]
+
                 if isinstance(nestedMember, MetaInspectable):
-                    setattr(cls, MetaConst.CLASS_INSPECTABLE_MARK, True)
-                    nestedMemberDict = {member.__name__: nestedMember}
-                    if not nestedMember.isImplementationValid(cls, superList, immediateSubclasses, nestedMemberDict):
-                        msg = nestedMember.implementationErrorMsg().strip() \
-                              or f"""Terjadi kesalahan pada kelas: "{name}" implementasi member: "{nestedMember}" dg meta: "{nestedMember.__class__}"."""
-                        msg += f"\n   {_Reflex.getLineInfo(nestedMember.errorImplemetedMember())}"
-                        raise MetaInspectionExc(msg)
-                    break
+                    inspectables = nestedMember
+                    inspectMember(inspectables)
+                else:
+                    inspectables = _Reflex.getInspectable(nestedMember)
+                    if not inspectables:
+                        continue
+
+                print(f"MetaInspector nestedMember= {nestedMember} inspectables= {inspectables} isinstance(nestedMember, MetaInspectable)= {isinstance(nestedMember, MetaInspectable)}")
+                for inspectable in inspectables:
+                    print(f"MetaInspector inspectable = {inspectable} this = {cls}")
+                    print(f"MetaInspector nestedMember.content= {nestedMember.content}")
+                    print(f"MetaInspector _Reflex.isType(nestedMember.content)= {_Reflex.isType(nestedMember.content)}")
+                    print(f"MetaInspector _Reflex.isFunction(nestedMember.content)= {_Reflex.isFunction(nestedMember.content)}")
+                    inspectMember(inspectable)
+                setattr(cls, Meta.CLASS_INSPECTABLE_MARK, True)
+                break
 
         superclassTree = _Reflex.superclassesTree(cls, False)
+
+        print(f"MetaInspector fullName= {_Reflex.getFullName(cls)} superclassTree= {superclassTree} dict= {cls.__dict__}")
         if len(superclassTree) > 0:
             for sup in superclassTree:
+                print(f"MetaInspector sup= {sup} qualname= {sup.__qualname__}")
+                print(f"MetaInspector sup.__subclasses__()= {sup.__subclasses__()}")
+                print(f"sup.__dict__= {sup.__dict__}")
                 print(f"MetaInspector cls not in sup.__subclasses__()= {cls not in sup.__subclasses__()}")
                 print(f"MetaInspector cls= {cls}")
-                print(f"MetaInspector sup.__subclasses__()= {sup.__subclasses__()}")
                 try:
-                    if sup.__dict__[MetaConst.CLASS_INSPECTABLE_MARK]:
-                        print(f"sup.__dict__= {sup.__dict__}")
+                    if sup.__dict__[Meta.CLASS_INSPECTABLE_MARK]:
                         MetaInspector(sup.__name__, sup.__bases__, dict(sup.__dict__), [cls])
-                except KeyError: pass
+                except KeyError as e:
+                    print(f"MetaInspector sup= {sup} lagi error e= {e} sup.__dict__= {sup.__dict__}")
+                    if _Reflex.getInspectable(sup):
+                        print(f"MetaInspector sup= {sup} lagi error e= {e} masuk if")
+                        MetaInspector(sup.__name__, sup.__bases__, dict(sup.__dict__), [cls])
 
 
 

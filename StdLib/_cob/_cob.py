@@ -6,6 +6,7 @@ from meta.CallSuper import CallSuper
 from meta.Final import Final
 from meta.MetaInspectable import MetaInspectable
 from meta.MetaInspector import MetaInspector
+from meta._Meta import classMeta
 from reflex import _Reflex
 from stdop.operable.OperableFun_ import toSequence, toList
 from stdop.operable.OperableList import listOf
@@ -184,10 +185,15 @@ for mem in inspect.getmembers(B(15)):
 
 def kwarg(**a: str):
     for e in a.values():
-        print(e)
+        print(f"""kwarg e= {e}""")
+    print(a)
+def arg(*a: str):
+    for e in a:
+        print(f"""arg e= {e}""")
     print(a)
 
 kwarg(halo=1, ok=10)
+arg(1,2,3)
 
 @property
 def propFun(): return "propFun"
@@ -213,41 +219,63 @@ print(dick.keys())
 
 print("\n=================== link =================\n")
 
+print(C.__bases__)
+print(A.ada.__dict__)
+print(A.ada.__call__)
 print(inspect.getsourcelines(A.ada))
 print(inspect.getsourcelines(A.ada))
 print(inspect.getfile(A.ada))
 print(_Reflex.classesTree(B))
 print(_Reflex.classesTree(B, False))
 print(type(A.__class__).__name__)
+print(type(A.ada).__name__)
+print(A.ada.__class__.__name__)
 print(A.ada.__name__)
 
 print("\n=================== Final Meta =================\n")
 
 
-class A(metaclass=MetaInspector):
-    @Final
+class D(metaclass=MetaInspector):
+    @Final(a=10, b="halo")
     def ada(this):
-        print(f"A.ada()")
+        print(f"D.ada()")
 
     @CallSuper
     def adade(this):
-        print(f"A.adade()")
+        print(f"D.adade()")
 
 
-print(f"A.__subclasses__() = {A.__subclasses__()}")
+print(f"D.__subclasses__() = {D.__subclasses__()}")
 
-class B(A): pass
+#@classMeta(Final(a=10, z="ok"), CallSuper)
+class E(D): pass
 
-class C(B):
+print(f"E= {E}")
+print(f"E()= {E()}")
+#print(f"E().__meta_inspectable__= {E().__meta_inspectable__}")
+#print(f"E().__meta_inspectable__.__dict__= {E().__meta_inspectable__}")
+class F(E):
     def adade(this):
-        print(f"C.adade()")
-"""        
+        print(f"F.adade()")
+
         return super(
 
         ).adade(
-            
+
         )
-"""
+
+    def ada(this):
+        return super().ada()
+
+
+class G(E): pass
+
+
+
+f = F()
+f.adade()
+print(f"f.adade.__dict__= {f.adade.__dict__}")
+#print(f"c.ada.a= {c.ada.a}")
 
 
 """    
@@ -260,9 +288,24 @@ class C(B):
 
 # type("HaloCls", (B,), {"x": 1})
 
-print(f"A.__subclasses__() = {A.__subclasses__()}")
+print(f"D.__subclasses__() = {D.__subclasses__()}")
 
-print(f"inspect.getmembers(B)= {inspect.getmembers(B)}")
-print(f"B.__dict__= {B.__dict__}")
+print(f"inspect.getmembers(E)= {inspect.getmembers(E)}")
+print(f"E.__dict__= {E.__dict__}")
 
-print(A())
+print(D())
+
+
+class Meta:
+    def __init__(this, a, b, **kwargs) -> None:
+        super().__init__()
+        print("Meta.init", this, a, b)
+
+    def __call__(this, fun):
+        print("Meta.call", this, fun)
+        return fun
+
+@Meta(1, 2)
+class A2: pass
+
+A2()

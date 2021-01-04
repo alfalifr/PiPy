@@ -1,4 +1,0 @@
-"""
-def callSuper(fun):
-    fun
-"""

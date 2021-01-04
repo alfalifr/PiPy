@@ -1,21 +1,22 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 
-from exception.MetaInspectionExc import MetaInspectionExc
 from foundation.wrapper.FlatWrapper import FlatWrapper
-from generic.Generics_ import T
+from val.generic import T
 from meta import Meta
-from reflex import _Reflex
+from reflex import Reflex
 
 
-class MetaInspectable(ABC, FlatWrapper[T]):
+class Annotation(ABC, FlatWrapper[T]):
     """
     Kelas dasar yg dapat digunakan sbg unit inspeksi yg dicek oleh semua metaclass yg ada di library ini.
+    Kelas ini dapat digunakan sebagai anotasi yang akan dicek oleh `MetaInspector`.
     """
 
-    #TODO blum bisa untuk anotasi yg menerima param tambahan.
     def __init__(this, content: T = None, **kwargs):
         """
+        *Pastikan semua turunan dari kelas ini memanggil `super().__init__`*
+
         :param content: adalah fungsi atau kelas yg ditandai dg anotasi ini.
           Param ini adalah param yg diberikan oleh interpreter yaitu dg menambahkan param tambahan pada akhir decorator.
           Contoh:
@@ -31,12 +32,13 @@ class MetaInspectable(ABC, FlatWrapper[T]):
         :param kwargs: param untuk menambahkan argumen tambahan pada kelas ini saat digunakan sbg decorator.
         """
         print(f"""MetaInspectable __init__ content = {content} this= {this}""")
-        if not _Reflex.isAnnotatedUnit(content) and content is not None:
+        if not Reflex.isAnnotatedUnit(content) and content is not None:
             raise TypeError(f"""MetaInspectable: "{this}" digunakan untuk membungkus sesuatu selain kelas dan fungsi.""")
 
         super().__init__(content)
-        print(f"MetaInspectable.__init__() this = {this} isinstance(this, MetaInspectable)= {isinstance(this, MetaInspectable)}")
-        if content is not None:
+        print(f"MetaInspectable.__init__() this = {this} isinstance(this, MetaInspectable)= {isinstance(this, Annotation)}")
+        if content is not None and kwargs.__len__() == 0:  # kwargs harus kosong, karena anggapannya param [content] hanya boleh di-pass oleh interpreter.
+            #%src{meta_kind}
             #setattr(content, Meta.INSPECTABLE_PROP_NAME, this)
             this._injectThisMeta(content)
             this.injectData(content, **kwargs)
@@ -50,7 +52,7 @@ class MetaInspectable(ABC, FlatWrapper[T]):
     Properti ini bersifat abstract jadi harus di-implement pada subclass.
     """
 
-    bool: bool = False
+    bool_: bool = False
     """Berisi valaue boolean yg akan di-inspeksi oleh metaclass pada library ini."""
 
     def injectData(this, content: T, **kwargs):
@@ -59,13 +61,14 @@ class MetaInspectable(ABC, FlatWrapper[T]):
 
     def _injectThisMeta(this, content: T):
         print(f"_injectThisMeta mulai this= {this} content= {content}")
+        this._checkTarget(content)
         try:
             metaList = content.__dict__[Meta.INSPECTABLE_PROP_NAME]
             print(f"_injectThisMeta metaList= {metaList} this= {this} try berhasil")
             if not isinstance(metaList, list):
                 if metaList:
-                    metaList = [metaList]
-                else: metaList = []
+                    metaList = [metaList]  # Jika `metaList` tidak None atau sebagainya, maka simpan di list.
+                else: metaList = []  # Jika None atau sebagainya, maka buat list kosong.
             print(f"_injectThisMeta metaList= {metaList} this= {this} try berhasil 2")
         except KeyError as e:
             print(f"_injectThisMeta e= {e}")
@@ -75,6 +78,31 @@ class MetaInspectable(ABC, FlatWrapper[T]):
         print(f"_injectThisMeta metaList= {metaList} content= {content}")
         setattr(content, Meta.INSPECTABLE_PROP_NAME, metaList)
         print(f"_injectThisMeta metaList= {metaList} content.__dict__[Meta.INSPECTABLE_PROP_NAME]= {content.__dict__[Meta.INSPECTABLE_PROP_NAME]}")
+
+    @property
+    def targets(this) -> List["Target._Enum"]:
+        try: return this.__dict__[Meta.META_TARGETS_NAME]
+        except KeyError: return []
+
+    def _checkTarget(this, content: T):
+        """
+        Mengecek apakah content sesuai `Target` (Target.CLASS, Target.FUNCTION, Target.META,) dari `this` Annotation.
+        :param content: objek yang di-anotasi.
+        :return:
+        """
+        if this.__class__.__name__ == "Target": return  # Gak usah dicek kalo `this` adalah anotasi `Target`.
+        try:
+            targets = this.targets  # content.__dict__[Meta.META_TARGETS_NAME]
+            print(f"Annotation._checkTarget() cls= {this.__class__.__name__} target= {targets}")
+            bool_ = False
+            if targets is not None:
+                for target in targets:
+                    if target.checkFun(content):
+                        bool_ = True
+                        break
+            if not bool_:
+                raise TypeError(f"Param `obj` ({content}) bkn merupakan salah satu dari {targets}")
+        except KeyError: pass
 
     @abstractmethod
     def isImplementationValid(
@@ -99,18 +127,29 @@ class MetaInspectable(ABC, FlatWrapper[T]):
         return this.content
 
     def __call__(this, inspectedUnit = None):
+        """
+        Fungsi ini berguna saat anotasi `MetaInspectable` diberi parameter tambahan.
+        Contoh:
+            @decorator(a, b)
+            def fun():
+              ...
+            Hasil terjemahan kode di atas menjadi fun = decorator(a,b)(fun)
+        Maka tentunya, interpreter Python memanggil fungsi `__call__` dengan parameter `inspectedUnit`.
+        :param inspectedUnit:
+        :return:
+        """
         print(f"MetaInspectable this.content= {this.content} inspectedUnit= {inspectedUnit}")
         if this.content is not None:
             res = this.content
         elif inspectedUnit is not None:
-            if not _Reflex.isAnnotatedUnit(inspectedUnit):
-                raise TypeError(f"""MetaInspectable: "{this}" digunakan untuk membungkus sesuatu selain kelas dan fungsi.""")
+            if not Reflex.isAnnotatedUnit(inspectedUnit):
+                raise TypeError(f"""MetaInspectable: "{this}" digunakan untuk membungkus sesuatu selain {this.targets}.""")
             this.injectData(inspectedUnit, **this.__dict__[Meta.META_KWARGS_NAME])
             this._injectThisMeta(inspectedUnit)
             this.content = inspectedUnit
             res = inspectedUnit
         else:
-            raise TypeError(f"""MetaInspectable: "{this}" digunakan untuk membungkus sesuatu selain kelas dan fungsi.""")
+            raise TypeError(f"""Annotation: "{this.__class__.__name__}" digunakan untuk membungkus sesuatu selain {this.targets}.""")
 
         """
         if len(this.__class__.__subclasses__()) == 0:
@@ -124,19 +163,19 @@ class MetaInspectable(ABC, FlatWrapper[T]):
 #    def cob(this): print(f"MetaInspectable.cob()")
 
 
-def createMetaInspectableFrom(obj, name: str = "") -> MetaInspectable[T]:
+def createMetaInspectableFrom(obj, name: str = "") -> Annotation[T]:
     """
     Membuat MetaInspectable yg berasal dari sebuah [obj] dg nama [name].
     :param obj: Objek yg dijadikan sebagai MetaInspectable.
     :param name: Nama yg diberikan pada MetaInspecstable.
     :return: MetaInspecstable.
     """
-    inspectable = MetaInspectable(obj)
+    inspectable = Annotation(obj)
     inspectable.name = name.strip() or obj.__str__()
     return inspectable
 
 
-def createMetaInspectable(name: str) -> MetaInspectable[T]:
+def createMetaInspectable(name: str) -> Annotation[T]:
     """
     Membuat MetaInspectable simpel tanpa objek yg di-wrap dg nama [name].
     :param name: Nama yg diberikan pada MetaInspecstable.

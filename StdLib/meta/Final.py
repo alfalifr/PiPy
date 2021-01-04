@@ -1,14 +1,12 @@
-from typing import Tuple, Dict, Any, List
+from typing import Dict, Any, List
 
-from generic.Generics_ import T
-from meta.MetaInspectable import MetaInspectable
-from meta.MetaInspector import MetaInspector
+from meta.Annotation import Annotation
 from meta.metameta.Target import Target
-from reflex import _Reflex
+from reflex import Reflex
 
 
 @Target(Target.CLASS, Target.FUNCTION)
-class Final(MetaInspectable):
+class Final(Annotation):
     name: str = "Final"
 
     def isImplementationValid(
@@ -20,7 +18,7 @@ class Final(MetaInspectable):
         name = list(inspectedUnit.keys())[0]
         unit = inspectedUnit[name]
         this._inspected = unit
-        if _Reflex.isType(unit):
+        if Reflex.isType(unit):
             if len(immediateSubclasses) > 0:
                 this._inspectedImpl = immediateSubclasses[0]
                 return False
@@ -35,11 +33,10 @@ class Final(MetaInspectable):
         return True
 
     def implementationErrorMsg(this) -> str:
-        if _Reflex.isFunction(this._inspected):
+        if Reflex.isFunction(this._inspected):
             return f"""Method: "{this._inspected}" final, namun di-override pada kelas: "{this._subCls}"."""
-        elif _Reflex.isType(this._inspected):
+        elif Reflex.isType(this._inspected):
             return f"""Kelas: "{this._inspected}" final, namun di-extend oleh kelas: "{this._inspected.__subclasses__()}"."""
-
 
     def errorImplemetedMember(this):
         return this._inspectedImpl

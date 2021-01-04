@@ -1,6 +1,6 @@
 from typing import Generic, Union, Tuple, Any
 
-from generic.Generics_ import T
+from val.generic import T
 
 
 class Wrapper(Generic[T]):

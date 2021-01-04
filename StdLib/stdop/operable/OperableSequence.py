@@ -3,8 +3,7 @@ from typing import Any, Iterable, Iterator
 from collection.iterator.Iterator import iteratorOf
 from collection.iterator.SkippingIterator import skippingIteratorOf
 from collection.sequence.Sequence import SequenceImpl
-from generic.Generics_ import T_out
-from stdop.operable.Operable import Operable
+from val.generic import T_out
 from stdop.operable.OperableIterable import OperableIterable
 
 

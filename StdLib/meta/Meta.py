@@ -3,6 +3,7 @@
 
 META_ARGS_NAME = "meta_args"
 META_KWARGS_NAME = "meta_kwargs"
+META_TARGETS_NAME = "targets"
 INSPECTABLE_PROP_NAME = "__meta_inspectable__"
 INSPECTABLE_META_PROP_NAME = "__meta_meta_inspectable__"
 INSPECTABLE_META_RETENTION_PROP_NAME = "__meta_retention__"

@@ -1,11 +1,12 @@
-import inspect
 from abc import ABC, abstractmethod
-from typing import Generic, Iterator, Iterable
+from typing import Generic, Iterator as Itr, Iterable, Callable
+#from __future__ import annotations
 
-from generic.Generics_ import T_out
+from reflex.Reflex import isFunction, isGenerator
+from val.generic import T_out
 
 
-class Iterator(Generic[T_out], ABC, Iterator[T_out], Iterable[T_out]):
+class Iterator(Generic[T_out], ABC, Itr[T_out], Iterable[T_out]):
     """
     Kelas abstrak semua iterator pada library ini.
     """
@@ -19,17 +20,17 @@ class Iterator(Generic[T_out], ABC, Iterator[T_out], Iterable[T_out]):
     def __next__(this) -> T_out:
         return this.next()
 
-    def __iter__(this) -> Iterator[T_out]:
+    def __iter__(this) -> "Iterator[T_out]":
         return this
 
 
 class IteratorImpl(Iterator[T_out]):
-    nextFun: (lambda index: T_out) = None  # Diganti nilainya dg fungsi.
-    hasNextFun: (lambda prevNext, index: bool) = None  # Diganti nilainya dg fungsi.
+    nextFun: Callable[[int], T_out] = None  # Diganti nilainya dg fungsi.
+    hasNextFun: Callable[[T_out, int], bool] = None  # Diganti nilainya dg fungsi.
     _prevNext: T_out = None  # Item yg diambil dari fungsi [next] pada iterasi sblumya.
     _prevIndex: int = 0  # Indeks pada iterasi sblumnya.
 
-    def __init__(this, nextFun: (lambda index: T_out), hasNextFun: (lambda prevNext, index: bool)) -> None:
+    def __init__(this, nextFun: Callable[[int], T_out], hasNextFun: Callable[[T_out, int], bool]) -> None:
         super().__init__()
         this.nextFun = nextFun
         this.hasNextFun = hasNextFun
@@ -52,8 +53,23 @@ class IteratorImpl(Iterator[T_out]):
 
 
 def iteratorOf(*varargs) -> Iterator[T_out]:
-    return IteratorImpl(
-        lambda index: varargs[index],
-        lambda prevNext, index: index in range(0, len(varargs)),
-    )
+    range_ = range(0, len(varargs))
+    nextFun = lambda index: varargs[index]
+    hasNextFun = lambda prevNext, index: index in range_
 
+    if isGenerator(varargs):
+        next = {"n": None}
+
+        def hasNextFun_():
+            try:
+                next["n"] = varargs.__next__()
+                return True
+            except StopIteration: return False
+
+        nextFun = lambda index: next["n"]
+        hasNextFun = hasNextFun_
+
+    return IteratorImpl(
+        nextFun,
+        hasNextFun,
+    )

@@ -1,14 +1,13 @@
 import inspect
 from typing import List
 
-
 from meta.CallSuper import CallSuper
 from meta.Final import Final
-from meta.MetaInspectable import MetaInspectable
+from meta.Annotation import Annotation
 from meta.MetaInspector import MetaInspector
-from meta._Meta import classMeta
-from reflex import _Reflex
-from stdop.operable.OperableFun_ import toSequence, toList
+from meta._MetaFun import classMeta
+from reflex import Reflex
+from stdop.operable._OperableFun import toSequence, toList
 from stdop.operable.OperableList import listOf
 from stdop.operable.OperableSequence import OperableSequence
 
@@ -103,7 +102,7 @@ def attach(name: str, nilai):
         return fun
     return inner
 
-def inspectMeta(*metas: MetaInspectable):
+def inspectMeta(*metas: Annotation):
     def innerClassFun(cls):
         name = cls.__name__
         print(f"inspectMeta() name= {name}")
@@ -111,7 +110,7 @@ def inspectMeta(*metas: MetaInspectable):
         print(f"inspectMeta() members= {inspect.getmembers(cls)}")
 #        metas[0].cob()
         return cls
-    if len(metas) == 1 and not (issubclass(metas[0], MetaInspectable) or isinstance(metas[0], MetaInspectable)):
+    if len(metas) == 1 and not (issubclass(metas[0], Annotation) or isinstance(metas[0], Annotation)):
         raise TypeError(f"argumen inspectMeta() harus bertipe MetaInspectable, argumen aktual = {metas[0]}")
     return innerClassFun
 
@@ -225,8 +224,8 @@ print(A.ada.__call__)
 print(inspect.getsourcelines(A.ada))
 print(inspect.getsourcelines(A.ada))
 print(inspect.getfile(A.ada))
-print(_Reflex.classesTree(B))
-print(_Reflex.classesTree(B, False))
+print(Reflex.classesTree(B))
+print(Reflex.classesTree(B, False))
 print(type(A.__class__).__name__)
 print(type(A.ada).__name__)
 print(A.ada.__class__.__name__)
@@ -247,7 +246,7 @@ class D(metaclass=MetaInspector):
 
 print(f"D.__subclasses__() = {D.__subclasses__()}")
 
-@classMeta(Final(a=10, z="ok"), CallSuper)
+@classMeta(Final(a=10, z="ok"))
 class E(D): pass
 
 print(f"E= {E}")

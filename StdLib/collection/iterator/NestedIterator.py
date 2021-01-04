@@ -1,8 +1,8 @@
 from abc import abstractmethod
-from typing import Generic, List
+from typing import Generic
 
 from collection.iterator.Iterator import Iterator, iteratorOf
-from generic.Generics_ import In, Out
+from val.generic import In, Out
 from stdop.operable.OperableList import OperableList
 
 

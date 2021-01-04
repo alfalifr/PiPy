@@ -7,5 +7,4 @@ Out = TypeVar("Out", contravariant = True)  # Untuk menunjukan generic pada outp
 T = TypeVar("T")
 K = TypeVar("K")  # Key typeParam
 V = TypeVar("V")  # Value typeParam
-
-# End of line
+R = TypeVar("R")  # Return typeParam

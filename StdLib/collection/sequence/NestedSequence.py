@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Generic, Iterable
 
-from generic.Generics_ import T_out
+from collection.iterator.NestedIterator import NestedIterator
+from val.generic import In, Out
 
 
-class NestedSequence(Generic[T_out], ABC, Iterable[T_out]):
+class NestedSequence(Generic[In, Out], ABC, Iterable[Out]):
     """
     Kelas dasar untuk semua sequence pada library ini.
     """
 
     @abstractmethod
-    def __iter__(this) -> Iterator[T_out]: pass
+    def __iter__(this) -> NestedIterator[In, Out]: pass

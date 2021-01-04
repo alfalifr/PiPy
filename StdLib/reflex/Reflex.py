@@ -1,5 +1,5 @@
 import inspect
-from typing import List
+from typing import List, Iterable
 
 from meta import Meta
 
@@ -12,8 +12,19 @@ def isFunction(obj) -> bool:
     return obj.__class__.__name__ == "function"
 
 
+def isGenerator(obj) -> bool:
+    return obj.__class__.__name__ == "generator"
+
+
 def isAnnotatedUnit(obj) -> bool:
-    return isType(obj) or isFunction(obj)
+    return isType(obj) or isFunction(obj) or isGenerator(obj)
+
+
+def isAnnotation(obj) -> bool:
+    for cls in classesTree(obj.__class__, False):
+        if cls.__name__ == "Annotation":
+            return True
+    return False
 
 
 def hasInspectable(obj) -> bool:
@@ -45,6 +56,14 @@ def superclassesTree(cls: type, includeObjectCls: bool = True) -> List[type]:
     supers = classesTree(cls, includeObjectCls)
     supers.remove(cls)
     return supers
+
+
+def isSuperclassOf(super: type, sub: type) -> bool:
+    return super in superclassesTree(sub)
+
+
+def isSubclassOf(sub: type, super: type) -> bool:
+    return isSuperclassOf(super, sub)
 
 
 def getLineInfo(member) -> str:

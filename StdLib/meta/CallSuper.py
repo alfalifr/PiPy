@@ -1,15 +1,13 @@
 import inspect
 import re
-from typing import Tuple, Dict, Any, List
+from typing import Dict, Any, List
 
-from generic.Generics_ import T
-from meta.MetaInspectable import MetaInspectable
-from meta.MetaInspector import MetaInspector
+from meta.Annotation import Annotation
 from meta.metameta.Target import Target
 
 
 @Target(Target.FUNCTION)
-class CallSuper(MetaInspectable):
+class CallSuper(Annotation):
     name: str = "CallSuper"
 
     def isImplementationValid(

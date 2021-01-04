@@ -1,8 +1,8 @@
-import inspect
 from abc import abstractmethod
+from typing import Callable
 
 from collection.iterator.Iterator import Iterator, IteratorImpl
-from generic.Generics_ import T_out
+from val.generic import T_out
 
 
 class SkippingIterator(Iterator[T_out]):
@@ -21,7 +21,7 @@ class SkippingIterator(Iterator[T_out]):
 
 
 class SkippingIteratorImpl(SkippingIterator[T_out], IteratorImpl[T_out]):
-    skipFun: (lambda next_: bool) = None  # Diganti nilainya dg fungsi.
+    skipFun: Callable[[T_out], bool] = None  # Diganti nilainya dg fungsi.
     reverseSkipFunResult: bool = False
     _status = -1  # -1 untuk belum diketahui, -2 sedang berjalan, 0 selesai, 1 emit next.
 
@@ -66,7 +66,7 @@ class SkippingIteratorImpl(SkippingIterator[T_out], IteratorImpl[T_out]):
 
 def skippingIteratorOf(
         *varargs,
-        skipFun: (lambda next_: bool) = lambda it: True,
+        skipFun: Callable[[T_out], bool] = lambda it: True,
         reverseFunResult: bool = False
 ) -> SkippingIterator[T_out]:
     # print(f"skippingIteratorOf() skipFun= ${inspect.getsource(skipFun)}")

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Generic, Iterable
 
 from collection.iterator.Iterator import iteratorOf, Iterator
-from generic.Generics_ import T_out
+from val.generic import T_out
 
 
 class Sequence(Generic[T_out], ABC, Iterable[T_out]):
@@ -17,7 +17,7 @@ class Sequence(Generic[T_out], ABC, Iterable[T_out]):
 class SequenceImpl(Sequence[T_out]):
     def __new__(cls, content: Iterable[T_out]):
         if not isinstance(content, Iterable):
-            raise TypeError(f"""content: {content} harus Iterable.""")
+            raise TypeError("""content: %s harus Iterable.""" % content)
         inst = super().__new__(cls)
         inst.content = content
         return inst

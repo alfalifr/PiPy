@@ -1,10 +1,9 @@
 from abc import abstractmethod
 from typing import Iterable
 
-from collection.iterator.Iterator import Iterator
 from collection.iterator.SkippingIterator import SkippingIterator, skippingIteratorOf
 from collection.sequence.Sequence import Sequence, SequenceImpl
-from generic.Generics_ import T_out
+from val.generic import T_out
 
 
 class FilteringSequence(Sequence[T_out]):

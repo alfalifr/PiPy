@@ -1,9 +1,8 @@
-import inspect
-from typing import Any, List
+from typing import Any, List, Callable
 
 from collection.iterator.SkippingIterator import skippingIteratorOf
 from exception.NoSuchElementExc import NoSuchElementExc
-from generic.Generics_ import T
+from val.generic import T, T_out, R
 from stdop.operable.OperableIterable import OperableIterable
 
 
@@ -22,12 +21,12 @@ class OperableList(OperableIterable[T], List[T]):
         # print(f"OprList new(): content= {inst.content}")
         return inst
 
-    def filter(this, op: (lambda it: bool)):
+    def filter(this, op: Callable[[T_out], bool]) -> "OperableList[T]":
         # print(f"OprList filter() op= ${inspect.getsource(op)} *[e for e in this.content]= {[e for e in this.content]}")
         itr_ = skippingIteratorOf(*[e for e in this.content], skipFun = op, reverseFunResult = True)
         return OperableList([e for e in itr_])
 
-    def map(this, op: (lambda it: object)):
+    def map(this, op: Callable[[T], R]) -> "OperableList[R]":  #(lambda it: object)
         """
         Fungsi yg digunakan untuk mengubah isi dari `this.content` menjadi newList dg tipe data apapun itu
         hasilnya yg di hasilkan oleh :param op.
@@ -49,7 +48,7 @@ class OperableList(OperableIterable[T], List[T]):
         this._itrIndex = 0
         return newList
 
-    def reduce(this, op: (lambda accumulation, it: object)):
+    def reduce(this, op: Callable[[T, T], T]) -> T:  # (lambda accumulation, it: object)
         """
         Fungsi yg digunakan untuk mengubah isi dari `this.content` menjadi sebuah `accumulation`
         yg betipe data sama dg isi dari `this.content`.
@@ -72,16 +71,16 @@ class OperableList(OperableIterable[T], List[T]):
         return acc["val"]
 
     @property
-    def size(this):
+    def size(this) -> int:
         return len(this.content)
 
     @property
-    def first(this):
+    def first(this) -> T:
         try: return this.content[0]
         except: raise NoSuchElementExc("List kosong.")
 
     @property
-    def last(this):
+    def last(this) -> T:
         try: return this.content[this.size - 1]
         except: raise NoSuchElementExc("List kosong.")
 
@@ -103,4 +102,4 @@ def listOf(*varargs) -> OperableList[T]:
     :param varargs: kumpulan elemen yg mengisi `OperableList`.
     :return: `OperableList`
     """
-    return OperableList([*varargs])
+    return OperableList(list(varargs))

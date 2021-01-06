@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generic, Iterator as Itr, Iterable, Callable
-#from __future__ import annotations
 
-from reflex.Reflex import isFunction, isGenerator
+from reflex.Reflex import isGenerator, isIterator
 from val.generic import T_out
 
 
@@ -36,9 +35,9 @@ class IteratorImpl(Iterator[T_out]):
         this.hasNextFun = hasNextFun
 
     @property
-    def prevNext(this): return this._prevNext
+    def prevNext(this) -> T_out: return this._prevNext
     @property
-    def prevIndex(this): return this._prevIndex
+    def prevIndex(this) -> T_out: return this._prevIndex
 
     def next(this) -> T_out:
         if not this.hasNext():
@@ -52,17 +51,17 @@ class IteratorImpl(Iterator[T_out]):
         return this.hasNextFun(this.prevNext, this.prevIndex)
 
 
-def iteratorOf(*varargs) -> Iterator[T_out]:
-    range_ = range(0, len(varargs))
-    nextFun = lambda index: varargs[index]
+def iteratorOf(*args: T_out) -> Iterator[T_out]:
+    range_ = range(0, len(args))
+    nextFun = lambda index: args[index]
     hasNextFun = lambda prevNext, index: index in range_
 
-    if isGenerator(varargs):
+    if isGenerator(args) or isIterator(args):
         next = {"n": None}
 
         def hasNextFun_():
             try:
-                next["n"] = varargs.__next__()
+                next["n"] = args.__next__()
                 return True
             except StopIteration: return False
 

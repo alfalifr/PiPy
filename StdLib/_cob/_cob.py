@@ -8,7 +8,7 @@ from meta.MetaInspector import MetaInspector
 from meta._MetaFun import annotate
 from reflex import Reflex
 from stdop.operable._OperableFun import toSequence, toList
-from collection.OperableList import listOf
+from collection.List import listOf
 from collection.OperableSequence import OperableSequence
 
 itr = {'v' : 0}

@@ -3,7 +3,7 @@ from typing import Generic
 
 from collection.iterator.Iterator import Iterator, iteratorOf
 from val.generic import In, Out
-from collection.OperableList import OperableList
+from collection.List import List
 
 
 class NestedIterator(Generic[In, Out], Iterator[Out]):
@@ -17,8 +17,8 @@ class NestedIteratorImpl(NestedIterator[In, Out]):
     _startInputIterator: Iterator[In] = None
     _start: In = None
 
-    _activeOutputLines: OperableList[Iterator[Out]]
-    _activeInputLines: OperableList[Iterator[In]]
+    _activeOutputLines: List[Iterator[Out]]
+    _activeInputLines: List[Iterator[In]]
     _activeOutputIterator: Iterator[Out] = None
     _activeInputIterator: Iterator[In] = None
     _hasInited: bool

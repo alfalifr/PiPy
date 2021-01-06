@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Callable
 
 from collection.iterator.Iterator import Iterator, IteratorImpl
+from reflex.Reflex import isGenerator, isIterator
 from val.generic import T_out
 
 
@@ -27,9 +28,9 @@ class _SkippingIteratorImpl(SkippingIterator[T_out], IteratorImpl[T_out]):
 
     def __init__(
         this,
-        nextFun: (lambda index: T_out),
-        hasNextFun: (lambda prevNext, index: bool),
-        skipFun: (lambda next_: bool)
+        nextFun: Callable[[int], T_out],
+        hasNextFun: Callable[[T_out, int], bool],
+        skipFun: Callable[[T_out], bool]
     ) -> None:
         super().__init__(nextFun, hasNextFun)
         this.skiptFun = skipFun
@@ -65,18 +66,18 @@ class _SkippingIteratorImpl(SkippingIterator[T_out], IteratorImpl[T_out]):
 
 
 def skippingIteratorOf(
-        *varargs: T_out,
-        src: Iterator[T_out] = None,
-        skipFun: Callable[[T_out], bool] = lambda it: True,
-        reverseFunResult: bool = False
+    *args: T_out,
+    #src: Iterator[T_out] = None,
+    skipFun: Callable[[T_out], bool] = lambda it: True,
+    reverseFunResult: bool = False
 ) -> SkippingIterator[T_out]:
     # print(f"skippingIteratorOf() skipFun= ${inspect.getsource(skipFun)}")
-    range_ = range(0, len(varargs))
+    range_ = range(0, len(args))
     val = {"val": None}
 
     def hasNext_notSized(prevNext: T_out, index: int) -> bool:
         try:
-            val["val"] = src.__next__()
+            val["val"] = args.__next__()
             return True
         except StopIteration:
             return False
@@ -89,10 +90,10 @@ def skippingIteratorOf(
         return val["val"]
 
     def next_sized(index: int) -> T_out:
-        return varargs[index]
+        return args[index]
 
-    hasNextFun = hasNext_notSized if src is not None else hasNext_sized
-    nextFun = next_notSized if src is not None else next_sized
+    hasNextFun = hasNext_notSized if isGenerator(args) or isIterator(args) else hasNext_sized
+    nextFun = next_notSized if isGenerator(args) or isIterator(args) else next_sized
 
     itr = _SkippingIteratorImpl(
         hasNextFun,

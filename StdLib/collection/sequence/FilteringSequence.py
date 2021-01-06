@@ -5,11 +5,11 @@ from collection.iterator.SkippingIterator import SkippingIterator, skippingItera
 from collection.sequence.Sequence import Sequence, SequenceImpl
 from val.generic import T_out
 
-
+"""
 class FilteringSequence(Sequence[T_out]):
-    """
+    "" "
     Kelas sequence yg dapat mem-filter iterator-nya.
-    """
+    "" "
 
     @abstractmethod
     def __iter__(this) -> SkippingIterator[T_out]:
@@ -31,3 +31,4 @@ class FilteringSequenceImpl(FilteringSequence[T_out], SequenceImpl[T_out]):
 
 def filterSequenceOf(*varargs, filteringFun: (lambda next_: bool) = lambda it: True) -> FilteringSequence[T_out]:
     return FilteringSequenceImpl(varargs, filteringFun)
+"""

@@ -1,11 +1,13 @@
+import inspect
 from typing import Type, Optional
 
+from collection._CollectionFun import find
 from foundation.wrapper.Wrapper import Wrapper
 from log.logs import prinw, prind
 from reflex import Reflex
 from reflex.BoundedFun import BoundedFun
 from reflex.Property import Property
-from reflex.Reflex import copyMember
+from reflex.Reflex import copyMember, caller
 from val.generic import T
 
 
@@ -14,6 +16,21 @@ class FlatWrapper(Wrapper[T]):
     Kelas dasar Wrapper pada library ini yg memiliki sifat "flat", yaitu men-copy semua member (properti dan fungsi)
     pada [_content].
     """
+
+    def _callDelegateFun(this, *args, **kwargs):
+        """
+        Untuk memanggil fungsi dengan nama serupa dengan fungsi yang memanggil fungsi ini.
+        Fungsi ini untuk memudahkan pemanggilan terhadap fungsi delegasi milik `this.content`.
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        callerName = caller(1).__name__
+        name, fun = find(inspect.getmembers(this.content), lambda tup: tup[0] == callerName)
+        if not fun:
+            raise AttributeError(f"Tidak ada fungsi dengan nama '{callerName}' pada '{this.__class__}'")
+        #this.content.__dict__[callerName](*args, **kwargs)
+        return fun(*args, **kwargs)
 
     def __setContent(this, content: Optional[T]):
         #print(f"FlatWrapper.__setContent() content={content} content.__class__={content.__class__}")
@@ -26,7 +43,10 @@ class FlatWrapper(Wrapper[T]):
         elif isinstance(content, Wrapper):
             content = content.content  # setattr(this, "__content__", content)
         if content:
-            try: copyMember(content, this, transformFun=transformFun)
+            try: copyMember(
+                content, this, transformFun=transformFun,
+                predicate=lambda e, name: not hasattr(this, name) or this.overwriteExisting
+            )
             except: prinw(f"Tidak dapat men-copy semua atribut dari {content} ke kelas {this}")
 
         this.__content__ = content
@@ -43,10 +63,13 @@ class FlatWrapper(Wrapper[T]):
         lambda obj, field, value: obj.__setContent(value)
     )
 
-    def __init__(this, content: T):
+    overwriteExisting = Property(True)
+
+    def __init__(this, content: T, overwriteExisting: bool = True):
         super().__init__(content)
+        this.overwriteExisting = overwriteExisting
         this.content = content
-        prind(f"hasattr(this.__getContent, '__call__') = {hasattr(this.__getContent, '__call__')} this.__getContent={this.__getContent}")
+        #prind(f"hasattr(this.__getContent, '__call__') = {hasattr(this.__getContent, '__call__')} this.__getContent={this.__getContent}")
         #try: copyMember(content, this)
         #except: prind(f"Tidak dapat men-copy semua atribut dari {content} ke kelas {this}")
         #if not hasattr(this, "content"):

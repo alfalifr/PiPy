@@ -1,37 +1,42 @@
 import sys
-from typing import Iterable, Any, Callable, Optional, Iterator as PyIterator
+from typing import Iterable as PyIterable, Any, Callable, Optional, Iterator as PyIterator
 
 from collection.iterator.Iterator import Iterator
 from exception.NoSuchElementExc import NoSuchElementExc
+from log.logs import prind
 from stdop.operable.Operable import Operable
 from val.generic import T_out
 from val.type import IterableLike
 
 
-class OperableIterable(Operable[T_out], Iterable[T_out]):
+class Iterable(Operable[T_out], PyIterable[T_out]):
     """
     Kelas yg berisi sekumpulan data yg mirip dg Iterable dg fungsi tambahan.
     """
 
     #breakItr = False
 
-    def __new__(cls, content: IterableLike) -> "OperableIterable[T_out]":
-        if not (isinstance(content, Iterable) or isinstance(content, PyIterator)):
-            raise TypeError(f"""content: {content} harus Iterable.""")
-        iterable = content if isinstance(content, Iterable) else [e for e in content]
-        inst = super().__new__(cls, iterable)
-        return inst
+    def __init__(this, origin: IterableLike = [], **kwargs):
+        #prind(f"isinstance(content, Iterable)={isinstance(origin, Iterable)} isinstance(content, PyIterator)={isinstance(origin, PyIterator)} **kwargs={kwargs}")
+        if not (isinstance(origin, PyIterable) or isinstance(origin, PyIterator)):
+            raise TypeError(f"""content: {origin} harus Iterable.""")
+        iterable = origin if isinstance(origin, Iterable) else [e for e in origin]
 
-    def filter(this, op: Callable[[T_out], bool]) -> "OperableIterable[T_out]":
-        return OperableIterable([e for e in this.content if op(e)])
+        super().__init__(iterable, **kwargs)
+
+    def filter(this, op: Callable[[T_out], bool]) -> "Iterable[T_out]":
+        return Iterable([e for e in this.content if op(e)])
 
     def forEach(this, op: Callable[[T_out], object], start: int = 0, end: int = None):
-        this.breakItr = False
+        #this.breakItr = False
         i = 0
-        range_ = range(start, end or sys.maxsize)
+        range_ = range(start, end or this.size if hasattr(this, 'size') else sys.maxsize)
+        #prind(f"range_={range_} end or this.size if hasattr(this, 'size') else sys.maxsize={ end or this.size if hasattr(this, 'size') else sys.maxsize} this.itr={this.itr}")
         for e in this.itr:
+            #prind(f"Iterable.forEach() for e={e} i={i} i in range_={i in range_}")
             if i in range_:
                 op(e)
+            i += 1
 
     @property
     def first(this) -> T_out:
@@ -94,6 +99,6 @@ def iterableOf(
     *varargs: T_out,
     src: Iterable[T_out] = None,
     itrBuilder: Callable[[], Iterator[T_out]] = None
-) -> OperableIterable[T_out]:
+) -> Iterable[T_out]:
     itr = itrBuilder() if itrBuilder else src.__iter__()
 

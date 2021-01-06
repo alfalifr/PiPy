@@ -1,5 +1,5 @@
 from exception.NoSuchElementExc import NoSuchElementExc
-from collection.OperableList import OperableList
+from collection.List import List
 from collection.OperableSequence import OperableSequence
 
 

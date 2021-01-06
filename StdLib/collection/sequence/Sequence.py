@@ -1,9 +1,10 @@
-from abc import ABC, abstractmethod
-from typing import Generic, Iterable
+from abc import ABC
+from typing import Generic, Iterable, Callable
 
-from collection.iterator.Iterator import iteratorOf, Iterator
+from collection.iterator.Iterator import Iterator
+from collection.iterator.MappingIterator import mappingIteratorOf
 from collection.iterator.SkippingIterator import skippingIteratorOf
-from val.generic import T_out
+from val.generic import T_out, R
 
 
 class Sequence(Generic[T_out], ABC, Iterable[T_out]):
@@ -11,33 +12,43 @@ class Sequence(Generic[T_out], ABC, Iterable[T_out]):
     Kelas dasar untuk semua sequence pada library ini.
     """
 
-    @abstractmethod
-    def __iter__(this) -> Iterator[T_out]: pass
-
     """
     Kelas yg berisi sekumpulan data yg mirip dg Sequence yg memiliki operasi scr lazy.
     """
 
     _itrIndex = 0
-    _transformingFun: (lambda it: object) = None
+    _transformingFun: Callable[[T_out], R] = None
+    _filteringFun: Callable[[T_out], bool] = None
     """
     Lambda yg mengubah isi data dari `this.content` menjadi data lain.
     Lambda ini digunakan pada fungsi [map] agar fungsi tersebut tidak langsung menjalankan semua isi
     dari `this.content` dg for.
     """
 
-    def __new__(cls, content: T_out, transformingFun: (lambda it: object) = None) -> any:
+    """
+    def __new__(
+        cls,
+        content: T_out,
+        transformingFun: Callable[[T_out], R] = None
+    ) -> any:
         return super().__new__(cls, content)
+    """
 
-    def __init__(this, content: Iterable[T_out], transformingFun: (lambda it: object) = None):
+    def __init__(
+        this,
+        content: Iterable[T_out],
+        filteringFun: Callable[[T_out], bool] = None,
+        transformingFun: Callable[[T_out], R] = None,
+    ):
         super().__init__(content)
         this.content = content
+        this._filteringFun = filteringFun
         this._transformingFun = transformingFun
         # print(f"OprSeq init(): content= {this.content}")
 
-    def filter(this, op: (lambda it: bool)):
-        itr_ = skippingIteratorOf(src=this.__iter__(), skipFun=op, reverseFunResult=True)
-        return Sequence(itr_, this._transformingFun)
+    def filter(this, op: Callable[[T_out], bool]):
+        #itr_ = skippingIteratorOf(this.__iter__(), skipFun=op, reverseFunResult=True)
+        return Sequence(this.content, op, this._transformingFun)
 
     def map(this, op: (lambda it: object)):
         """
@@ -55,7 +66,7 @@ class Sequence(Generic[T_out], ABC, Iterable[T_out]):
             # print(f"seq map() it= {it} res= {res}")
             return res
 
-        new = OperableSequence(this.content, transform)
+        new = Sequence(this.content, transform)
         return new
 
     def reduce(this, op: (lambda accumulation, it: object)):
@@ -89,13 +100,13 @@ class Sequence(Generic[T_out], ABC, Iterable[T_out]):
 
     def __iter__(this) -> Iterator[T_out]:
         #print(f"seq iter() this._transformingFun is not None = {this._transformingFun is not None}")
+        itr = this.content.__iter__()
+
+        if this._filteringFun is not None:
+            itr = skippingIteratorOf(itr, skipFun=this._filteringFun)
         if this._transformingFun is not None:
-            itr = []
-            this.forEach(lambda it: itr.append(this._transformingFun(it)))
-            return iteratorOf(*itr)
-        else:
-            #print(f"seq iter() : masuk catch")
-            return super().__iter__()
+            itr = mappingIteratorOf(itr, mappingFun=this._transformingFun)
+        return itr
 
     def __str__(this) -> str:
         str_ = "("
@@ -109,18 +120,18 @@ class Sequence(Generic[T_out], ABC, Iterable[T_out]):
         str_ += ")"
         return str_
 
-
+"""
 class SequenceImpl(Sequence[T_out]):
     def __new__(cls, content: Iterable[T_out]):
         if not isinstance(content, Iterable):
-            raise TypeError("""content: %s harus Iterable.""" % content)
+            raise TypeError('content: %s harus Iterable.' % content)
         inst = super().__new__(cls)
         inst.content = content
         return inst
 
     def __iter__(this) -> Iterator[T_out]:
         return iteratorOf(*this.content)
+"""
 
-
-def simpleSequenceOf(*vararg) -> Sequence[T_out]:
-    return SequenceImpl(vararg)
+def sequenceOf(*args) -> Sequence[T_out]:
+    return Sequence(args)

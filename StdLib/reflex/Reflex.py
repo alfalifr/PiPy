@@ -3,7 +3,7 @@ import inspect
 import logging
 import sys
 import types
-from typing import List, Callable, Optional
+from typing import List, Callable, Optional, Iterable, Iterator
 
 from log.logs import prind
 from meta import Meta
@@ -29,7 +29,11 @@ def isConstructor(obj) -> bool:
 
 
 def isGenerator(obj) -> bool:
-    return isinstance(obj, types.GeneratorType) # obj.__class__.__name__ == "generator"
+    return isinstance(obj, types.GeneratorType) or isinstance(obj, Iterable) # obj.__class__.__name__ == "generator"
+
+
+def isIterator(obj) -> bool:
+    return isinstance(obj, Iterator)
 
 
 def isAnnotatedUnit(obj) -> bool:
@@ -169,11 +173,12 @@ def qualName(cls: type) -> str:
 
 def copyMember(
         fromObj, toObj,
-        predicate: Callable[[any], bool] = None,
+        predicate: Callable[[any, str], bool] = None,
         transformFun: Callable[[T], R] = None
 ):
-    for name, member in inspect.getmembers(fromObj, predicate):
+    for name, member in inspect.getmembers(fromObj):
         #print(f"copyMember().name= {name} member= {member} fromObj= {fromObj} toObj= {toObj}")
+        if not predicate or not predicate(member, name): continue
         try:
             new = transformFun(member) if transformFun else member
             setattr(toObj, name, new)

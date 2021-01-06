@@ -20,7 +20,7 @@ class Final(Annotation):
         this._inspected = unit
         if Reflex.isType(unit):
             if len(immediateSubclasses) > 0:
-                this._inspectedImpl = immediateSubclasses[0]
+                this._inspectedImpl = immediateSubclasses  #[0]
                 return False
             return True
         else:
@@ -36,7 +36,7 @@ class Final(Annotation):
         if Reflex.isFunction(this._inspected):
             return f"""Method: "{this._inspected}" final, namun di-override pada kelas: "{this._subCls}"."""
         elif Reflex.isType(this._inspected):
-            return f"""Kelas: "{this._inspected}" final, namun di-extend oleh kelas: "{this._inspected.__subclasses__()}"."""
+            return f"""Kelas: "{this._inspected}" final, namun di-extend oleh kelas: "{this._inspected.__subclasses__().__str__()}"."""
 
     def errorImplemetedMember(this):
         return this._inspectedImpl

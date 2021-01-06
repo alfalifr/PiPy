@@ -3,7 +3,7 @@ from typing import Generic
 
 from collection.iterator.Iterator import Iterator, iteratorOf
 from val.generic import In, Out
-from stdop.operable.OperableList import OperableList
+from collection.OperableList import OperableList
 
 
 class NestedIterator(Generic[In, Out], Iterator[Out]):

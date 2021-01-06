@@ -18,9 +18,6 @@ class Target(MetaAnnotation):
         def __str__(this) -> str:
             return this.name
 
-        def __repr__(this) -> str:
-            return f"Target of {this.__str__()}"
-
     CLASS = _Enum(1, "Class", Reflex.isType)
     FUNCTION = _Enum(2, "Function", lambda x: Reflex.isFunction(x) or Reflex.isGenerator(x))
     META = _Enum(3, "Meta", lambda x: isinstance(x, Annotation))

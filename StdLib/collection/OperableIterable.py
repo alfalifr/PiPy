@@ -1,23 +1,25 @@
 import sys
-from typing import Iterable, Any, Callable, Optional
+from typing import Iterable, Any, Callable, Optional, Iterator as PyIterator
 
 from collection.iterator.Iterator import Iterator
 from exception.NoSuchElementExc import NoSuchElementExc
-from foundation.wrapper.FlatWrapper import FlatWrapper
+from stdop.operable.Operable import Operable
 from val.generic import T_out
+from val.type import IterableLike
 
 
-class OperableIterable(FlatWrapper[T_out], Iterable[T_out]):
+class OperableIterable(Operable[T_out], Iterable[T_out]):
     """
     Kelas yg berisi sekumpulan data yg mirip dg Iterable dg fungsi tambahan.
     """
 
-    breakItr = False
+    #breakItr = False
 
-    def __new__(cls, content: T_out) -> Any:
-        if not isinstance(content, Iterable):
+    def __new__(cls, content: IterableLike) -> "OperableIterable[T_out]":
+        if not (isinstance(content, Iterable) or isinstance(content, PyIterator)):
             raise TypeError(f"""content: {content} harus Iterable.""")
-        inst = super().__new__(cls, content)
+        iterable = content if isinstance(content, Iterable) else [e for e in content]
+        inst = super().__new__(cls, iterable)
         return inst
 
     def filter(this, op: Callable[[T_out], bool]) -> "OperableIterable[T_out]":
@@ -72,12 +74,26 @@ class OperableIterable(FlatWrapper[T_out], Iterable[T_out]):
     @property
     def itr(this) -> Iterator[T_out]:
         # print(f"itr itr() cls= {type(this)} this.content= {this.content}")
+        """
         list = []
         this.breakItr = False
         for e in this.content:
             if this.breakItr: break
             list.append(e)
         return list.__iter__()
+        """
+        return this.__iter__()
 
+    """
     def __iter__(this) -> Iterator[T_out]:
         return this.itr
+    """
+
+
+def iterableOf(
+    *varargs: T_out,
+    src: Iterable[T_out] = None,
+    itrBuilder: Callable[[], Iterator[T_out]] = None
+) -> OperableIterable[T_out]:
+    itr = itrBuilder() if itrBuilder else src.__iter__()
+

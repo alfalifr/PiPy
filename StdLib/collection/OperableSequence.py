@@ -4,7 +4,7 @@ from collection.iterator.Iterator import iteratorOf
 from collection.iterator.SkippingIterator import skippingIteratorOf
 from collection.sequence.Sequence import SequenceImpl
 from val.generic import T_out
-from stdop.operable.OperableIterable import OperableIterable
+from collection.OperableIterable import OperableIterable
 
 
 class OperableSequence(OperableIterable[T_out], SequenceImpl[T_out]):

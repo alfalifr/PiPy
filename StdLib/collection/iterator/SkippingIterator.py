@@ -20,7 +20,7 @@ class SkippingIterator(Iterator[T_out]):
         pass
 
 
-class SkippingIteratorImpl(SkippingIterator[T_out], IteratorImpl[T_out]):
+class _SkippingIteratorImpl(SkippingIterator[T_out], IteratorImpl[T_out]):
     skipFun: Callable[[T_out], bool] = None  # Diganti nilainya dg fungsi.
     reverseSkipFunResult: bool = False
     _status = -1  # -1 untuk belum diketahui, -2 sedang berjalan, 0 selesai, 1 emit next.
@@ -65,14 +65,38 @@ class SkippingIteratorImpl(SkippingIterator[T_out], IteratorImpl[T_out]):
 
 
 def skippingIteratorOf(
-        *varargs,
+        *varargs: T_out,
+        src: Iterator[T_out] = None,
         skipFun: Callable[[T_out], bool] = lambda it: True,
         reverseFunResult: bool = False
 ) -> SkippingIterator[T_out]:
     # print(f"skippingIteratorOf() skipFun= ${inspect.getsource(skipFun)}")
-    itr = SkippingIteratorImpl(
-        lambda index: varargs[index],
-        lambda prevNext, index: index in range(0, len(varargs)),
+    range_ = range(0, len(varargs))
+    val = {"val": None}
+
+    def hasNext_notSized(prevNext: T_out, index: int) -> bool:
+        try:
+            val["val"] = src.__next__()
+            return True
+        except StopIteration:
+            return False
+
+    def hasNext_sized(prevNext: T_out, index: int) -> bool:
+        return index in range_
+
+
+    def next_notSized(index: int) -> T_out:
+        return val["val"]
+
+    def next_sized(index: int) -> T_out:
+        return varargs[index]
+
+    hasNextFun = hasNext_notSized if src is not None else hasNext_sized
+    nextFun = next_notSized if src is not None else next_sized
+
+    itr = _SkippingIteratorImpl(
+        hasNextFun,
+        nextFun,
         skipFun,
     )
     itr.reverseSkipFunResult = reverseFunResult

@@ -5,8 +5,7 @@ from typing import Tuple, Dict, Any, Iterable, List
 from exception.IllegalStateExc import IllegalStateExc
 from exception.MetaInspectionExc import MetaInspectionExc
 from meta import Meta
-from meta.Annotation import Annotation, createMetaInspectable
-from meta.metameta.Target import Target
+from meta.Annotation import Annotation
 from reflex import Reflex
 
 
@@ -32,7 +31,7 @@ class MetaInspector(type):
             if not inspectable.isImplementationValid(cls, superList, immediateSubclasses, nestedMemberDict):
                 msg = inspectable.implementationErrorMsg().strip() \
                       or f"""Terjadi kesalahan pada kelas: "{name}" implementasi member: "{inspectedMember}" dg meta: "{inspectedMember.__class__}"."""
-                msg += f"\n   {Reflex.getLineInfo(inspectable.errorImplemetedMember())}"
+                msg += f"\n   {Reflex.lineInfo(inspectable.errorImplemetedMember())}"
                 raise MetaInspectionExc(msg)
 
         # Pengecekan untuk @Target(Target.FUNCTION)
@@ -85,7 +84,7 @@ class MetaInspector(type):
         superclassTree = Reflex.superclassesTree(cls, False)
 
         # 3. Cek `MetaInspectable` pada superclassTree.
-        print(f"MetaInspector fullName= {Reflex.getFullName(cls)} superclassTree= {superclassTree} dict= {cls.__dict__}")
+        print(f"MetaInspector fullName= {Reflex.fullName(cls)} superclassTree= {superclassTree} dict= {cls.__dict__}")
         if len(superclassTree) > 0:
             for sup in superclassTree:
                 print(f"MetaInspector sup= {sup} qualname= {sup.__qualname__}")

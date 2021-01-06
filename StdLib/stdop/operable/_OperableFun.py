@@ -1,8 +1,6 @@
-from collections import Iterable
-
 from exception.NoSuchElementExc import NoSuchElementExc
-from stdop.operable.OperableList import OperableList
-from stdop.operable.OperableSequence import OperableSequence
+from collection.OperableList import OperableList
+from collection.OperableSequence import OperableSequence
 
 
 def toSequence(obj):

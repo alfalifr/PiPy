@@ -5,11 +5,11 @@ from meta.CallSuper import CallSuper
 from meta.Final import Final
 from meta.Annotation import Annotation
 from meta.MetaInspector import MetaInspector
-from meta._MetaFun import classMeta
+from meta._MetaFun import annotate
 from reflex import Reflex
 from stdop.operable._OperableFun import toSequence, toList
-from stdop.operable.OperableList import listOf
-from stdop.operable.OperableSequence import OperableSequence
+from collection.OperableList import listOf
+from collection.OperableSequence import OperableSequence
 
 itr = {'v' : 0}
 
@@ -246,7 +246,7 @@ class D(metaclass=MetaInspector):
 
 print(f"D.__subclasses__() = {D.__subclasses__()}")
 
-@classMeta(Final(a=10, z="ok"))
+@annotate(Final(a=10, z="ok"))
 class E(D): pass
 
 print(f"E= {E}")

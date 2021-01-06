@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 
+from collection._CollectionFun import isEmpty
 from foundation.wrapper.FlatWrapper import FlatWrapper
+from log.logs import prind
+from text.text import contentStr
 from val.generic import T
 from meta import Meta
 from reflex import Reflex
@@ -31,12 +34,12 @@ class Annotation(ABC, FlatWrapper[T]):
           Sebaiknya, jika ingin menambahkan argumen, gunakan keyword.
         :param kwargs: param untuk menambahkan argumen tambahan pada kelas ini saat digunakan sbg decorator.
         """
-        print(f"""MetaInspectable __init__ content = {content} this= {this}""")
+        prind(f"""MetaInspectable __init__ content = {content} this= {this}""")
         if not Reflex.isAnnotatedUnit(content) and content is not None:
             raise TypeError(f"""MetaInspectable: "{this}" digunakan untuk membungkus sesuatu selain kelas dan fungsi.""")
 
         super().__init__(content)
-        print(f"MetaInspectable.__init__() this = {this} isinstance(this, MetaInspectable)= {isinstance(this, Annotation)}")
+        #prind(f"MetaInspectable.__init__() this = {this} isinstance(this, MetaInspectable)= {isinstance(this, Annotation)}")
         if content is not None and kwargs.__len__() == 0:  # kwargs harus kosong, karena anggapannya param [content] hanya boleh di-pass oleh interpreter.
             #%src{meta_kind}
             #setattr(content, Meta.INSPECTABLE_PROP_NAME, this)
@@ -60,24 +63,24 @@ class Annotation(ABC, FlatWrapper[T]):
             setattr(content, key, kwargs[key])
 
     def _injectThisMeta(this, content: T):
-        print(f"_injectThisMeta mulai this= {this} content= {content}")
+        prind(f"_injectThisMeta mulai this= {this} content= {content}")
         this._checkTarget(content)
         try:
             metaList = content.__dict__[Meta.INSPECTABLE_PROP_NAME]
-            print(f"_injectThisMeta metaList= {metaList} this= {this} try berhasil")
+            prind(f"_injectThisMeta metaList= {metaList} this= {this} try berhasil")
             if not isinstance(metaList, list):
                 if metaList:
                     metaList = [metaList]  # Jika `metaList` tidak None atau sebagainya, maka simpan di list.
                 else: metaList = []  # Jika None atau sebagainya, maka buat list kosong.
-            print(f"_injectThisMeta metaList= {metaList} this= {this} try berhasil 2")
+            prind(f"_injectThisMeta metaList= {metaList} this= {this} try berhasil 2")
         except KeyError as e:
-            print(f"_injectThisMeta e= {e}")
+            prind(f"_injectThisMeta e= {e}")
             metaList = []
 
         metaList.append(this)
-        print(f"_injectThisMeta metaList= {metaList} content= {content}")
+        prind(f"_injectThisMeta metaList= {metaList} content= {content}")
         setattr(content, Meta.INSPECTABLE_PROP_NAME, metaList)
-        print(f"_injectThisMeta metaList= {metaList} content.__dict__[Meta.INSPECTABLE_PROP_NAME]= {content.__dict__[Meta.INSPECTABLE_PROP_NAME]}")
+        prind(f"_injectThisMeta metaList= {metaList} content.__dict__[Meta.INSPECTABLE_PROP_NAME]= {content.__dict__[Meta.INSPECTABLE_PROP_NAME]}")
 
     @property
     def targets(this) -> List["Target._Enum"]:
@@ -93,15 +96,15 @@ class Annotation(ABC, FlatWrapper[T]):
         if this.__class__.__name__ == "Target": return  # Gak usah dicek kalo `this` adalah anotasi `Target`.
         try:
             targets = this.targets  # content.__dict__[Meta.META_TARGETS_NAME]
-            print(f"Annotation._checkTarget() cls= {this.__class__.__name__} target= {targets}")
-            bool_ = False
+            prind(f"Annotation._checkTarget() cls= {this.__class__.__name__} target= {contentStr(targets)} targets.__class__.__name__ = {targets.__class__.__name__}")
+            bool_ = isEmpty(targets)
             if targets is not None:
                 for target in targets:
                     if target.checkFun(content):
                         bool_ = True
                         break
             if not bool_:
-                raise TypeError(f"Param `obj` ({content}) bkn merupakan salah satu dari {targets}")
+                raise TypeError(f"Param `obj` ({content}) bkn merupakan salah satu dari {contentStr(targets)}")
         except KeyError: pass
 
     @abstractmethod
@@ -126,7 +129,7 @@ class Annotation(ABC, FlatWrapper[T]):
     def errorImplemetedMember(this):
         return this.content
 
-    def __call__(this, inspectedUnit = None):
+    def __call__(this, inspectedUnit=None, *args, **kwargs):
         """
         Fungsi ini berguna saat anotasi `MetaInspectable` diberi parameter tambahan.
         Contoh:
@@ -138,9 +141,12 @@ class Annotation(ABC, FlatWrapper[T]):
         :param inspectedUnit:
         :return:
         """
-        print(f"MetaInspectable this.content= {this.content} inspectedUnit= {inspectedUnit}")
+        prind(f"MetaInspectable this.content= {this.content} inspectedUnit= {inspectedUnit}")
         if this.content is not None:
-            res = this.content
+            content = this.content
+            res = content(*args, **kwargs) if isinstance(content, type) or Reflex.isFunction(content) \
+                else content
+            #prind(f"MetaInspectable __call__ res={res} this.content= {this.content} this.content is not None => MASUK")
         elif inspectedUnit is not None:
             if not Reflex.isAnnotatedUnit(inspectedUnit):
                 raise TypeError(f"""MetaInspectable: "{this}" digunakan untuk membungkus sesuatu selain {this.targets}.""")
@@ -148,9 +154,11 @@ class Annotation(ABC, FlatWrapper[T]):
             this._injectThisMeta(inspectedUnit)
             this.content = inspectedUnit
             res = inspectedUnit
+            #prind(f"MetaInspectable __call__ res={res} this.content= {this.content} this.content is not None => GAK MASUK")
         else:
             raise TypeError(f"""Annotation: "{this.__class__.__name__}" digunakan untuk membungkus sesuatu selain {this.targets}.""")
 
+        prind(f"MetaInspectable __call__ res={res} inspectedUnit= {inspectedUnit}")  # this.content={this.content}
         """
         if len(this.__class__.__subclasses__()) == 0:
             if _Reflex.isFunction(res) and this.__dict__[Meta.INSPECTABLE_META_TARGET_PROP_NAME] != 2:  # Target.FUNCTION:
@@ -160,10 +168,10 @@ class Annotation(ABC, FlatWrapper[T]):
         """
         return res
 
-#    def cob(this): print(f"MetaInspectable.cob()")
+#    def cob(this): prind(f"MetaInspectable.cob()")
 
 
-def createMetaInspectableFrom(obj, name: str = "") -> Annotation[T]:
+def createMetaInspectableFrom(obj: T, name: str = "") -> Annotation[T]:
     """
     Membuat MetaInspectable yg berasal dari sebuah [obj] dg nama [name].
     :param obj: Objek yg dijadikan sebagai MetaInspectable.

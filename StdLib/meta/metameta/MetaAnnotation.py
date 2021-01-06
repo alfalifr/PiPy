@@ -13,7 +13,7 @@ class MetaAnnotation(Annotation):
         if not (isinstance(content, Annotation) or content is None):
             raise TypeError(f"""MetaAnnotation: "{this}" hanya untuk `{Annotation.__name__}` yg lain, bkn untuk content= "{content}".""")
         super().__init__(content, **kwargs)
-        print(f"MetaMetaInspectable.__init__() this = {this} isinstance(this, MetaInspectable)= {isinstance(this, Annotation)}")
+        #print(f"MetaMetaInspectable.__init__() this = {this} isinstance(this, MetaInspectable)= {isinstance(this, Annotation)}")
 
 
     def isImplementationValid(
@@ -22,11 +22,11 @@ class MetaAnnotation(Annotation):
     ) -> bool:
         return True  # Karena MetaMetaInspectable hanya meninjeksi data.
 
-    def __call__(this, inspectedUnit=None):
+    def __call__(this, inspectedUnit=None, *args, **kwargs):
         res = this.content if this.content is not None else inspectedUnit
-        print(f"MetaAnnotation.__call__() res= {res} cls= {this.__class__.__name__}")
+        print(f"MetaAnnotation.__call__() res= {res} cls= {this.__class__}")
         if (not Reflex.isSuperclassOf(Annotation, res)) or res is None:
             raise ValueError(f"MetaAnnotation ({this.__class__.__name__}) harus digunakan ke `Annotation` lainnya.")
-        return super().__call__(inspectedUnit)
+        return super().__call__(inspectedUnit, *args, **kwargs)
 
 

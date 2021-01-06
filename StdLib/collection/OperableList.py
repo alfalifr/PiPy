@@ -3,7 +3,7 @@ from typing import Any, List, Callable
 from collection.iterator.SkippingIterator import skippingIteratorOf
 from exception.NoSuchElementExc import NoSuchElementExc
 from val.generic import T, T_out, R
-from stdop.operable.OperableIterable import OperableIterable
+from collection.OperableIterable import OperableIterable
 
 
 class OperableList(OperableIterable[T], List[T]):
